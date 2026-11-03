@@ -1,24 +1,20 @@
-/* ==========================================================
-   S&P 500 — a very 90s wedding website
-   Change the colors here and they update everywhere.
-   ========================================================== */
 
 :root {
   --navy:    #000033;
   --cream:   #fffdf0;
   --ink:     #1a1a1a;
-  --gray:    #c0c0c0;   /* classic Windows 95 gray */
+  --gray:    #c0c0c0; 
   --gray-dk: #808080;
-  --link:    #0000ee;   /* the original blue link */
+  --link:    #0000ee;  
   --visited: #551a8b;
   --hot:     #ff0099;
   --teal:    #008080;
   --gold:    #ffcc00;
-  --led:     #33ff66;   /* stock-ticker green */
+  --led:     #33ff66;  
   --red:     #ff3333;
 }
 
-/* ---------- Background: tiled starfield ---------- */
+/* Background*/
 html {
   background-color: var(--navy);
   background-image:
@@ -47,7 +43,7 @@ main,
   box-sizing: border-box;
 }
 
-/* ---------- Stock ticker ---------- */
+/* Ticker */
 .ticker {
   display: block;
   background: #000;
@@ -63,7 +59,7 @@ main,
 .ticker .up   { color: var(--led); }
 .ticker .down { color: var(--red); }
 
-/* ---------- Header + nav (Windows 95 buttons) ---------- */
+/* Header/navigation */
 .site-header {
   margin-top: 24px;
   background: var(--gray);
@@ -115,7 +111,7 @@ main,
   font-weight: bold;
 }
 
-/* ---------- Main page panel ---------- */
+/* main panel*/
 main {
   background: var(--cream);
   border: 6px ridge var(--gold);
@@ -201,7 +197,7 @@ button:active { border-style: inset; }
   border: 4px inset var(--gray);
 }
 
-/* ---------- Event / content boxes ---------- */
+/* content styling */
 .event,
 .hotel,
 .registry-item,
@@ -227,7 +223,7 @@ button:active { border-style: inset; }
   padding: 0 8px;
 }
 
-/* ---------- Quick links as little Windows 95 windows ---------- */
+/* windows 95 style */
 .quick-links {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -260,7 +256,7 @@ button:active { border-style: inset; }
   font-size: 16px;
 }
 
-/* ---------- Details page ---------- */
+/* details */
 .page-nav {
   text-align: center;
   font-family: Arial, sans-serif;
@@ -304,7 +300,7 @@ summary {
   padding: 6px;
 }
 
-/* ---------- Our Story ---------- */
+/* Our story */
 img {
   max-width: 100%;
   height: auto;
@@ -371,14 +367,12 @@ img {
 .fine-print  { font-size: 12px; color: #ccccff; font-style: italic; }
 .best-viewed { font-family: "Courier New", monospace; font-size: 12px; color: var(--led); }
 
-/* ---------- The classic blink ---------- */
+
 @keyframes blink { 50% { opacity: 0; } }
 .blink { animation: blink 1s steps(1) infinite; }
 @media (prefers-reduced-motion: reduce) {
   .blink { animation: none; }
 }
-
-/* ---------- Phones ---------- */
 @media (max-width: 600px) {
   body { font-size: 17px; }
   .site-header { margin-top: 0; border-left: 0; border-right: 0; }
@@ -387,7 +381,6 @@ img {
   .nav-links { justify-content: center; }
 }
 
-/* ---------- Fixes ---------- */
 .registry-item h2 { margin-top: 0; font-size: 24px; }
 
 .site-footer {
@@ -395,6 +388,15 @@ img {
   border: 2px solid #1a1a66;
   padding: 10px 16px;
 }
+/*Cebelbrations */
+.celebration {
+  background: #ffffff;
+  border: 4px ridge var(--teal);
+  padding: 4px 20px 16px;
+  margin: 24px 0;
+}
+.celebration > h2 { margin-top: 12px; }
+.celebration > h3 { margin-top: 18px; color: var(--navy); }
 
 /* HEY-fill-this-out notes. Delete this block once everything's filled in. */
 .todo {
