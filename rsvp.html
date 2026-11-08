@@ -38,7 +38,8 @@
     <p>Type your name or phone number and we'll pull up your party. You can come back and change your answers any time before the deadline.</p>
 
     <form id="rsvp-find" class="rsvp-form">
-      <label for="rsvp-q">Your name or phone number</label>
+      <label for="rsvp-q">Your name or the last 4 digits of your phone</label>
+      <input type="text" id="rsvp-q" autocomplete="name" placeholder="e.g. Pat Clark or 1234" required>
       <input type="text" id="rsvp-q" autocomplete="name" placeholder="e.g. Pat Clark or (317) 555-1234" required>
       <button type="submit">Find my invite</button>
     </form>
