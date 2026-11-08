@@ -83,6 +83,263 @@
     <p class="best-viewed">Best viewed in Netscape Navigator at 800 &times; 600</p>
   </footer>
 
-  <script src="script.js"></script>
+<script>
+(function () {
+  var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyoXo-WAwSUskL2SRIiMoInUrhNSDpQdnSK6ftm9ui9aC8kQrBBE06uDaYWP1clNah-Jw/exec';
+  var STORE_KEY = 'rsvpParty';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var findForm = $('rsvp-find'), form = $('rsvp-form'), statusEl = $('rsvp-status'),
+      picker = $('rsvp-picker'), done = $('rsvp-done');
+  var data = null, kidCount = 0;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function say(msg) { statusEl.innerHTML = msg || ''; }
+  function store(v) { try { v ? localStorage.setItem(STORE_KEY, v) : localStorage.removeItem(STORE_KEY); } catch (e) {} }
+  function stored() { try { return localStorage.getItem(STORE_KEY); } catch (e) { return null; } }
+
+  function api(params) {
+    var qs = Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+    return fetch(WEB_APP_URL + '?' + qs).then(function (r) { return r.json(); });
+  }
+
+  function fmtDate(iso) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return iso || '';
+    var p = iso.split('-');
+    return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  function fullName(m) { return (m.first + ' ' + (m.last || '')).trim(); }
+
+  findForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var q = $('rsvp-q').value.trim();
+    if (q.length < 3) { say('Type your full name or the last 4 digits of your phone.'); return; }
+    say('Looking you up&hellip;');
+    picker.innerHTML = '';
+    api({ action: 'lookup', q: q }).then(function (res) {
+      if (res.error) { say(esc(res.error)); return; }
+      if (res.party) { showParty(res.party); return; }
+      if (!res.matches.length) {
+        say("Hmm, we couldn't find you. Try your full first and last name, or the last 4 digits of your phone. Still stuck? Text Sam or Patrick.");
+        return;
+      }
+      say('A few invites match. Which one is yours?');
+      res.matches.forEach(function (m) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'rsvp-pick';
+        b.textContent = m.label;
+        b.addEventListener('click', function () { loadParty(m.party); });
+        picker.appendChild(b);
+      });
+    }).catch(function () { say('Something went wrong. Try again in a minute, or text Sam or Patrick.'); });
+  });
+
+  function loadParty(party) {
+    say('Loading your invite&hellip;');
+    picker.innerHTML = '';
+    api({ action: 'party', party: party }).then(function (res) {
+      if (res.error) { store(null); findForm.hidden = false; say(''); return; }
+      showParty(res);
+    }).catch(function () { findForm.hidden = false; say('Something went wrong. Try again in a minute, or text Sam or Patrick.'); });
+  }
+
+  function showParty(p) {
+    data = p;
+    kidCount = 0;
+    store(p.party);
+    say('');
+    picker.innerHTML = '';
+    findForm.hidden = true;
+    done.hidden = true;
+    form.hidden = false;
+    $('rsvp-party').textContent = p.members.filter(function (m) { return m.first; }).map(fullName).join(', ') || p.party;
+
+    var prior = p.prior || [];
+    var yes = {};
+    prior.forEach(function (r) { if (r.attending) yes[(r.id || r.name) + '|' + r.event] = true; });
+    var hasPrior = prior.length > 0;
+
+    var priorName = {};
+    prior.forEach(function (r) { if (r.id) priorName[r.id] = r.name; });
+
+    var people = p.members.map(function (m) {
+      return { id: m.id, name: m.first ? fullName(m) : (priorName[m.id] || ''), unnamed: !m.first, type: m.type, events: m.events };
+    });
+
+    var addedKids = [];
+    prior.forEach(function (r) { if (r.added && addedKids.indexOf(r.name) === -1) addedKids.push(r.name); });
+
+    var box = $('rsvp-events');
+    box.innerHTML = '';
+    p.events.forEach(function (ev) {
+      var who = people.filter(function (x) { return x.events.indexOf(ev.id) !== -1; });
+      if (!who.length) return;
+      var fs = document.createElement('fieldset');
+      fs.className = 'rsvp-event';
+      fs.dataset.event = ev.id;
+      var meta = [ev.date ? fmtDate(ev.date) : 'Date coming soon', ev.location].filter(Boolean).join(' &middot; ');
+      var html = '<legend>' + esc(ev.name) + '</legend><p class="rsvp-meta">' + meta + '</p>';
+      if (ev.deadline) {
+        html += '<p class="rsvp-deadline">' + (ev.closed ? 'RSVPs closed ' : 'Please RSVP by ') + esc(fmtDate(ev.deadline)) + '</p>';
+      }
+      html += '<p class="rsvp-hint">Check everyone who\'s coming:</p>';
+      who.forEach(function (x) {
+        var key = x.id + '|' + ev.id;
+        html += '<label><input type="checkbox" data-person="' + esc(x.id) + '"' +
+          (yes[key] ? ' checked' : '') + (ev.closed ? ' disabled' : '') + '> ' +
+          '<span class="rsvp-name" data-name-for="' + esc(x.id) + '">' + esc(x.name || 'Your guest') + '</span></label>';
+      });
+      html += '<div class="rsvp-kids"></div>';
+      if (ev.kidsWelcome && !ev.weddingOnly && !ev.closed) {
+        html += '<button type="button" class="rsvp-addkid">+ Add a kid</button>';
+      }
+      fs.innerHTML = html;
+      box.appendChild(fs);
+    });
+
+    var pbox = $('rsvp-people');
+    pbox.innerHTML = '';
+    var priorDiet = {};
+    prior.forEach(function (r) { if (r.dietary) priorDiet[r.id || r.name] = r.dietary; });
+    people.forEach(function (x) {
+      var row = document.createElement('div');
+      row.className = 'rsvp-person';
+      row.dataset.person = x.id;
+      var html = '';
+      if (x.unnamed) {
+        html += '<label>Your guest\'s name<input type="text" class="rsvp-guestname" value="' + esc(x.name) + '" placeholder="First and last name"></label>';
+      }
+      html += '<label>Dietary needs' + (x.unnamed ? '' : ' for ' + esc(x.name)) +
+        '<input type="text" class="rsvp-diet" value="' + esc(priorDiet[x.id] || '') + '" placeholder="Allergies, vegetarian, etc."></label>';
+      row.innerHTML = html;
+      pbox.appendChild(row);
+    });
+
+    addedKids.forEach(function (name) { addKid(name, yes, priorDiet[name]); });
+
+    var wed = p.events.some(function (ev) { return ev.weddingOnly; });
+    $('rsvp-lodging-box').hidden = !wed;
+    var lodging = '';
+    prior.forEach(function (r) { if (r.lodging) lodging = r.lodging; });
+    Array.prototype.forEach.call(form.querySelectorAll('input[name="lodging"]'), function (r) { r.checked = r.value === lodging; });
+    $('rsvp-message').value = prior.length ? prior[0].message : '';
+    $('rsvp-submit').textContent = hasPrior ? 'Update my RSVP' : 'Send RSVP';
+  }
+
+  function addKid(name, yes, diet) {
+    kidCount++;
+    var kid = 'kid' + kidCount;
+    yes = yes || {};
+    Array.prototype.forEach.call(document.querySelectorAll('.rsvp-event'), function (fs) {
+      var ev = data.events.filter(function (e) { return e.id === fs.dataset.event; })[0];
+      if (!ev || !ev.kidsWelcome || ev.weddingOnly) return;
+      var lab = document.createElement('label');
+      lab.innerHTML = '<input type="checkbox" data-person="' + kid + '"' +
+        (name && yes[name + '|' + ev.id] ? ' checked' : '') + (ev.closed ? ' disabled' : '') +
+        '> <span class="rsvp-name" data-name-for="' + kid + '">' + esc(name || 'New kid') + '</span>';
+      fs.querySelector('.rsvp-kids').appendChild(lab);
+    });
+    var row = document.createElement('div');
+    row.className = 'rsvp-person rsvp-kid';
+    row.dataset.person = kid;
+    row.innerHTML = '<label>Kid\'s name<input type="text" class="rsvp-guestname" value="' + esc(name || '') + '" placeholder="First and last name"></label>' +
+      '<label>Dietary needs<input type="text" class="rsvp-diet" value="' + esc(diet || '') + '"></label>' +
+      '<button type="button" class="rsvp-removekid">Remove</button>';
+    $('rsvp-people').appendChild(row);
+    if (!name) row.querySelector('.rsvp-guestname').focus();
+  }
+
+  form.addEventListener('click', function (e) {
+    if (e.target.classList.contains('rsvp-addkid')) { addKid(''); }
+    if (e.target.classList.contains('rsvp-removekid')) {
+      var id = e.target.parentNode.dataset.person;
+      Array.prototype.forEach.call(form.querySelectorAll('[data-person="' + id + '"]'), function (el) {
+        (el.tagName === 'INPUT' ? el.parentNode : el).remove();
+      });
+    }
+  });
+
+  form.addEventListener('input', function (e) {
+    if (!e.target.classList.contains('rsvp-guestname')) return;
+    var id = e.target.closest('.rsvp-person').dataset.person;
+    Array.prototype.forEach.call(form.querySelectorAll('[data-name-for="' + id + '"]'), function (s) {
+      s.textContent = e.target.value.trim() || (id.indexOf('kid') === 0 ? 'New kid' : 'Your guest');
+    });
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var people = [];
+    var problem = '';
+    Array.prototype.forEach.call(form.querySelectorAll('.rsvp-person'), function (row) {
+      var id = row.dataset.person;
+      var isKid = id.indexOf('kid') === 0;
+      var nameInput = row.querySelector('.rsvp-guestname');
+      var member = isKid ? null : data.members.filter(function (m) { return m.id === id; })[0];
+      var name = nameInput ? nameInput.value.trim() : fullName(member);
+      var attending = [];
+      Array.prototype.forEach.call(form.querySelectorAll('input[type="checkbox"][data-person="' + id + '"]'), function (cb) {
+        if (cb.checked) attending.push(cb.closest('.rsvp-event').dataset.event);
+      });
+      if (nameInput && !name && attending.length) problem = 'Please add a name for everyone you checked.';
+      people.push({ id: isKid ? '' : id, name: name, attending: attending, dietary: row.querySelector('.rsvp-diet').value });
+    });
+    if (problem) { say(problem); return; }
+
+    var lodgingEl = form.querySelector('input[name="lodging"]:checked');
+    var body = {
+      party: data.party,
+      people: people,
+      lodging: lodgingEl ? lodgingEl.value : '',
+      message: $('rsvp-message').value,
+    };
+
+    var btn = $('rsvp-submit');
+    btn.disabled = true;
+    say('Sending&hellip;');
+    fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        btn.disabled = false;
+        if (!res.ok) { say(esc(res.error || 'Something went wrong. Please try again.')); return; }
+        say('');
+        form.hidden = true;
+        done.hidden = false;
+        var coming = people.filter(function (x) { return x.attending.length; }).length;
+        $('rsvp-done-text').textContent = coming
+          ? "We can't wait to see you. If plans change, come back here and update your answers."
+          : "We'll miss you! If plans change, come back here and update your answers.";
+        window.scrollTo(0, 0);
+      })
+      .catch(function () { btn.disabled = false; say('Something went wrong. Please try again, or text Sam or Patrick.'); });
+  });
+
+  $('rsvp-switch').addEventListener('click', function (e) {
+    e.preventDefault();
+    store(null);
+    data = null;
+    form.hidden = true;
+    done.hidden = true;
+    findForm.hidden = false;
+    $('rsvp-q').value = '';
+    $('rsvp-q').focus();
+    say('');
+  });
+
+  $('rsvp-edit').addEventListener('click', function (e) {
+    e.preventDefault();
+    if (data) loadParty(data.party);
+  });
+
+  var saved = stored();
+  if (saved) { findForm.hidden = true; loadParty(saved); }
+})();
+</script>
 </body>
 </html>
