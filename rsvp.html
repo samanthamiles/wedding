@@ -119,6 +119,7 @@
   function oops(msg) {
     var box = $('rsvp-oops');
     $('rsvp-oops-text').textContent = msg;
+    if (box && box.parentNode !== document.body) document.body.appendChild(box);
     if (box && box.showModal) { box.showModal(); } else { say(esc(msg)); }
   }
   $('rsvp-oops-close').addEventListener('click', function () {
