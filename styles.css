@@ -417,3 +417,23 @@ img {
 .rsvp-form .rsvp-addkid, .rsvp-form .rsvp-removekid { margin-top: 8px; font-size: 13px; }
 .rsvp-person { border-top: 1px dashed var(--gray); padding-top: 6px; margin-top: 8px; }
 .rsvp-person:first-child { border-top: 0; margin-top: 0; }
+
+/* ---------- RSVP error ---------- */
+.rsvp-oops {
+  max-width: 340px;
+  padding: 0;
+  border: 3px outset #ffffff;
+  background: #c0c0c0;
+  font-family: Arial, sans-serif;
+}
+.rsvp-oops::backdrop { background: rgba(0, 0, 0, 0.4); }
+.rsvp-oops-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: var(--navy);
+  color: #ffffff;
+  font-weight: bold;
+}
+.rsvp-oops p { margin: 14px 16px; }
+.rsvp-oops button { display: block; margin: 0 auto 14px; min-width: 80px; }
