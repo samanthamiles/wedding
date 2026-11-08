@@ -32,62 +32,52 @@
     </nav>
   </header>
 
+
   <main>
     <h1>RSVP</h1>
-    <p>Please reply by <strong><span class="todo">HEY, FILL THIS OUT WITH the RSVP deadline</span></strong>.</p>
+    <p>Type your name or phone number and we'll pull up your party. You can come back and change your answers any time before the deadline.</p>
 
-    <!--
-      This form doesn't send anywhere yet.
-      To make it work, replace the action="" URL with your form service's endpoint
-      (e.g. Formspree), or delete this whole form and paste in an embed
-      (e.g. Google Forms iframe or your wedding-platform RSVP link).
-    -->
-    <form class="rsvp-form" action="" method="POST">
-
-      <label for="name">Full name</label>
-      <input type="text" id="name" name="name" required>
-
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" required>
-
-      <fieldset>
-        <legend>Will you be joining us?</legend>
-        <label><input type="radio" name="attending" value="yes" required> Joyfully accepts</label>
-        <label><input type="radio" name="attending" value="no"> Regretfully declines</label>
-      </fieldset>
-
-      <label for="guests">Number of guests (including you)</label>
-      <input type="number" id="guests" name="guests" min="1" value="1"> <!-- HEY: add max="2" (or whatever) to cap party size -->
-
-      <label for="guest-names">Names of additional guests</label>
-      <input type="text" id="guest-names" name="guest_names">
-
-      <fieldset>
-        <legend>Which events will you attend?</legend>
-        <label><input type="checkbox" name="events" value="engagement-party"> Engagement Party (Austin, February 2027)</label>
-        <label><input type="checkbox" name="events" value="welcome"> Welcome Drinks</label>
-        <label><input type="checkbox" name="events" value="ceremony"> Ceremony</label>
-        <label><input type="checkbox" name="events" value="reception"> Reception</label>
-      </fieldset>
-
-      <label for="meal">Meal choice</label>
-      <select id="meal" name="meal">
-        <option value="">Select one</option>
-        <option value="">HEY, FILL THIS OUT WITH MEAL OPTION 1</option>
-        <option value="">HEY, FILL THIS OUT WITH MEAL OPTION 2</option>
-        <option value="">HEY, FILL THIS OUT WITH MEAL OPTION 3</option>
-      </select>
-
-      <label for="dietary">Dietary needs</label>
-      <input type="text" id="dietary" name="dietary">
-
-      <label for="message">A note for us (optional)</label>
-      <textarea id="message" name="message" rows="4"></textarea>
-
-      <button type="submit" class="button">Send RSVP</button>
+    <form id="rsvp-find" class="rsvp-form">
+      <label for="rsvp-q">Your name or phone number</label>
+      <input type="text" id="rsvp-q" autocomplete="name" placeholder="e.g. Pat Clark or (317) 555-1234" required>
+      <button type="submit">Find my invite</button>
     </form>
+
+    <div id="rsvp-status" class="rsvp-status" aria-live="polite"></div>
+    <div id="rsvp-picker"></div>
+
+    <form id="rsvp-form" class="rsvp-form" hidden>
+      <p class="rsvp-who">RSVP for <strong id="rsvp-party"></strong> &middot; <a href="#" id="rsvp-switch">Not you?</a></p>
+      <div id="rsvp-events"></div>
+
+      <fieldset id="rsvp-people-box">
+        <legend>Anything we should know?</legend>
+        <div id="rsvp-people"></div>
+      </fieldset>
+
+      <fieldset id="rsvp-lodging-box" hidden>
+        <legend>Wedding weekend lodging</legend>
+        <p>Do you plan to stay with us at the wedding venue?</p>
+        <label><input type="radio" name="lodging" value="Yes"> Yes</label>
+        <label><input type="radio" name="lodging" value="No"> No, we'll stay elsewhere</label>
+        <label><input type="radio" name="lodging" value="Not sure"> Not sure yet</label>
+      </fieldset>
+
+      <label for="rsvp-message">Note for Sam &amp; Patrick (optional)</label>
+      <textarea id="rsvp-message" rows="4"></textarea>
+
+      <button type="submit" id="rsvp-submit">Send RSVP</button>
+    </form>
+
+    <div id="rsvp-done" hidden>
+      <h2>Got it! Thank you!</h2>
+      <p id="rsvp-done-text"></p>
+      <p><a href="#" id="rsvp-edit">Change my answers</a></p>
+    </div>
   </main>
 
+
+  
   <footer class="site-footer">
     <p class="fine-print">Past performance is not indicative of future results. But we're feeling good about this one.</p>
     <p class="best-viewed">Best viewed in Netscape Navigator at 800 &times; 600</p>
