@@ -116,17 +116,30 @@
 
   function fullName(m) { return (m.first + ' ' + (m.last || '')).trim(); }
 
+  function oops(msg) {
+    var box = $('rsvp-oops');
+    $('rsvp-oops-text').textContent = msg;
+    if (box && box.showModal) { box.showModal(); } else { say(esc(msg)); }
+  }
+  $('rsvp-oops-close').addEventListener('click', function () {
+    $('rsvp-oops').close();
+    $('rsvp-q').focus();
+  });
+
   findForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var q = $('rsvp-q').value.trim();
-    if (q.length < 3) { say('Type your full name or the last 4 digits of your phone.'); return; }
+    if (q.length < 3) { oops('Type your full first and last name, or the last 4 digits of your phone.'); return; }
     say('Looking you up&hellip;');
     picker.innerHTML = '';
     api({ action: 'lookup', q: q }).then(function (res) {
-      if (res.error) { say(esc(res.error)); return; }
+      say('');
+      if (res.error) { oops(res.error); return; }
       if (res.party) { showParty(res.party); return; }
       if (!res.matches.length) {
-        say("Hmm, we couldn't find you. Try your full first and last name, or the last 4 digits of your phone. Still stuck? Text Sam or Patrick.");
+        oops(/^\d+$/.test(q.replace(/[\s()+-]/g, ''))
+          ? "We couldn't find that phone number. Try the last 4 digits of your cell, or your full first and last name. Still stuck? Text Sam or Patrick."
+          : "We couldn't find that name. Try your full first and last name the way it's on your invite, or the last 4 digits of your phone. Still stuck? Text Sam or Patrick.");
         return;
       }
       say('A few invites match. Which one is yours?');
@@ -138,9 +151,8 @@
         b.addEventListener('click', function () { loadParty(m.party); });
         picker.appendChild(b);
       });
-    }).catch(function () { say('Something went wrong. Try again in a minute, or text Sam or Patrick.'); });
+    }).catch(function () { say(''); oops('Something went wrong on our end. Try again in a minute, or text Sam or Patrick.'); });
   });
-
   function loadParty(party) {
     say('Loading your invite&hellip;');
     picker.innerHTML = '';
