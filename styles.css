@@ -156,6 +156,28 @@ a         { color: var(--link); }
 a:visited { color: var(--visited); }
 a:hover   { color: var(--hot); background: var(--gold); }
 
+/* ---------- Clickable event boxes ---------- */
+a.event-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+a.event-link:visited { color: inherit; }
+a.event-link:hover {
+  background: #fff6fb;
+  color: inherit;
+  border-style: solid;
+  border-color: var(--hot);
+}
+.event-more {
+  margin: 4px 0 0;
+  font-family: Arial, sans-serif;
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--link);
+}
+a.event-link:hover .event-more { color: var(--hot); }
+
 /* ---------- Buttons ---------- */
 .button,
 button {
