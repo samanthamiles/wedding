@@ -15,8 +15,7 @@
     LOVE <span class="up">&#9650;&#9650;&#9650;</span> &middot;
     COLD FEET <span class="down">&#9660;</span> &middot;
     Q1 2027: ENGAGEMENT PARTY (AUSTIN) <span class="up">&#9650;</span> &middot;
-    Q4 2027: WEDDING <span class="up">&#9650;</span> &middot;
-    OPEN BAR <span class="up">&#9650;</span>
+    Q4 2027: WEDDING <span class="up">&#9650;</span>
   </marquee>
 
   <header class="site-header">
@@ -40,8 +39,10 @@
        </dialog>
 
   <main>
-    <h1>RSVP</h1>
+    <h1>Engagement Party RSVP</h1>
+    <p>Saturday, February 6, 2027 &middot; Austin. Please RSVP by January 15.</p>
     <p>Type your name or phone number and we'll pull up your party. You can come back and change your answers any time before the deadline.</p>
+    <p>Wedding RSVPs will open here later.</p>
 
     <form id="rsvp-find" class="rsvp-form">
       <label for="rsvp-q">Your name or the last 4 digits of your phone</label>
@@ -93,6 +94,7 @@
 (function () {
   var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1UZDPcTJudpKI3ajLyQqGo8tLjVs2JQqAKRRftUds_navF6399H3Bwd3bM87KVXSQRw/exec';
   var STORE_KEY = 'rsvpParty';
+  var OPEN_EVENTS = ['ENG_PARTY']; // only these events show on the RSVP page
 
   var $ = function (id) { return document.getElementById(id); };
   var findForm = $('rsvp-find'), form = $('rsvp-form'), statusEl = $('rsvp-status'),
@@ -136,6 +138,10 @@
     e.preventDefault();
     var q = $('rsvp-q').value.trim();
     if (q.length < 3) { oops('Type your full first and last name, or the last 4 digits of your phone.'); return; }
+    if (!/^\d+$/.test(q.replace(/[\s()+-]/g, '')) && q.split(/\s+/).length < 2) {
+      oops('Add your last name too. Type your first and last name the way they\'d be on your invite (like "Jane Doe"), or the last 4 digits of your phone.');
+      return;
+    }
     say('Looking you up&hellip;');
     picker.innerHTML = '';
     api({ action: 'lookup', q: q }).then(function (res) {
@@ -169,6 +175,7 @@
   }
 
   function showParty(p) {
+    p.events = p.events.filter(function (ev) { return OPEN_EVENTS.indexOf(ev.id) !== -1; });
     data = p;
     kidCount = 0;
     store(p.party);
@@ -305,6 +312,9 @@
       var attending = [];
       Array.prototype.forEach.call(form.querySelectorAll('input[type="checkbox"][data-person="' + id + '"]'), function (cb) {
         if (cb.checked) attending.push(cb.closest('.rsvp-event').dataset.event);
+      });
+      (data.prior || []).forEach(function (r) {
+        if (!isKid && r.id === id && r.attending && OPEN_EVENTS.indexOf(r.event) === -1 && attending.indexOf(r.event) === -1) attending.push(r.event);
       });
       if (nameInput && !name && attending.length) problem = 'Please add a name for everyone you checked.';
       people.push({ id: isKid ? '' : id, name: name, attending: attending, dietary: row.querySelector('.rsvp-diet').value });
