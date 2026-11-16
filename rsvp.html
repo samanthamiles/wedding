@@ -214,6 +214,9 @@
       if (ev.deadline) {
         html += '<p class="rsvp-deadline">' + (ev.closed ? 'RSVPs closed ' : 'Please RSVP by ') + esc(fmtDate(ev.deadline)) + '</p>';
       }
+            if (ev.id === 'ENG_PARTY') {
+        html += '<p class="rsvp-weekend">This RSVP is for Saturday\'s party, 4&ndash;8pm. We\'ve got more going on all weekend: comedy Friday night, coffee Saturday morning, and the park on Sunday. No RSVP needed for those. <a href="engagement.html" target="_blank">See the whole weekend</a></p>';
+      }
       html += '<p class="rsvp-hint">Check everyone who\'s coming:</p>';
       who.forEach(function (x) {
         var key = x.id + '|' + ev.id;
